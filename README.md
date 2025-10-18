@@ -74,19 +74,63 @@ Tools → Query Tool
 
 [ código ddl ]
 
-CREATE TABLE cliente (
-  id_cliente SERIAL PRIMARY KEY,
-  nombre VARCHAR(100),
-  cedula VARCHAR(20),
-  telefono VARCHAR(20)
+-- Tabla Usuario
+CREATE TABLE Usuario (
+    usuario_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    apellido VARCHAR(50) NOT NULL,
+    tipo_usuario VARCHAR(30),
+    condicion_especial VARCHAR(100),
+    ciudad_id INT,
+    codigo_postal VARCHAR(10)
 );
 
-CREATE TABLE turno (
-  id_turno SERIAL PRIMARY KEY,
-  id_cliente INT REFERENCES cliente(id_cliente),
-  fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  estado VARCHAR(20)
+-- Tabla Ciudad
+CREATE TABLE Ciudad (
+    ciudad_id SERIAL PRIMARY KEY,
+    nombre_ciudad VARCHAR(50),
+    codigo_postal VARCHAR(10)
 );
+
+-- Tabla Servicio
+CREATE TABLE Servicio (
+    servicio_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(50),
+    descripcion TEXT,
+    estado VARCHAR(20)
+);
+
+-- Tabla Empleado
+CREATE TABLE Empleado (
+    empleado_id SERIAL PRIMARY KEY,
+    usuario_id INT REFERENCES Usuario(usuario_id),
+    cargo VARCHAR(50),
+    departamento VARCHAR(50)
+);
+
+-- Tabla Turno
+CREATE TABLE Turno (
+    turno_id SERIAL PRIMARY KEY,
+    usuario_id INT REFERENCES Usuario(usuario_id),
+    servicio_id INT REFERENCES Servicio(servicio_id),
+    empleado_id INT REFERENCES Empleado(empleado_id),
+    fecha DATE,
+    hora_inicio TIME,
+    hora_fin TIME,
+    estado VARCHAR(20)
+);
+
+-- Tabla Notificacion
+CREATE TABLE Notificacion (
+    notificacion_id SERIAL PRIMARY KEY,
+    usuario_id INT REFERENCES Usuario(usuario_id),
+    medio VARCHAR(30),
+    mensaje TEXT,
+    fecha_envio TIMESTAMP,
+    estado VARCHAR(20)
+);
+
+
 
 Luego presiona F5 o haz clic en el botón  (Execute) para ejecutar las sentencias.
 
@@ -97,29 +141,94 @@ Query returned successfully
 
 [ código dml]
 
-INSERT INTO cliente (nombre, cedula, telefono) VALUES
-('Juan Pérez', '123456789', '3001234567'),
-('Ana Gómez', '987654321', '3019876543'),
-('Luis Torres', '555666777', '3021112233'),
-('María López', '999888777', '303999888'),
-('Carlos Ruiz', '444333222', '3044445555'),
-('Elena Díaz', '111222333', '305111222'),
-('Ricardo León', '555444333', '306555444'),
-('Lucía Vega', '666777888', '307666777'),
-('Pedro Cruz', '222111000', '308222111'),
-('Valentina Mora', '777888999', '309777888');
+-- =============================================
+--   DML Base de Datos: Sistema de Turnos LiMar
+-- =============================================
 
-INSERT INTO turno (id_cliente, estado) VALUES
-(1, 'Pendiente'),
-(2, 'Atendido'),
-(3, 'Pendiente'),
-(4, 'Pendiente'),
-(5, 'Atendido'),
-(6, 'Pendiente'),
-(7, 'Pendiente'),
-(8, 'Atendido'),
-(9, 'Pendiente'),
-(10, 'Pendiente');
+-- 1️Insertar datos en Ciudad
+INSERT INTO Ciudad (nombre_ciudad, codigo_postal)
+VALUES 
+('Cali', '760001'),
+('Bogotá', '110111'),
+('Medellín', '050021'),
+('Palmira', '763531'),
+('Popayán', '190001'),
+('Buga', '763041'),
+('Tuluá', '763022'),
+('Cartago', '762021'),
+('Manizales', '170001'),
+('Pereira', '660001');
+
+--  Insertar datos en Usuario
+INSERT INTO Usuario (nombre, apellido, tipo_usuario, condicion_especial, ciudad_id, codigo_postal)
+VALUES 
+('Ana', 'Lopez', 'Cliente', 'Embarazo', 1, '760001'),
+('Carlos', 'Mora', 'Empleado', NULL, 2, '110111'),
+('Sofia', 'Perez', 'Cliente', 'Adulto mayor', 3, '050021'),
+('David', 'Torres', 'Proveedor', NULL, 4, '763531'),
+('Julian', 'Rojas', 'Cliente', 'Silla de ruedas', 5, '190001'),
+('Maria', 'Gomez', 'Empleado', NULL, 6, '763041'),
+('Andres', 'Ruiz', 'Cliente', NULL, 7, '763022'),
+('Luisa', 'Fernandez', 'Empleado', NULL, 8, '762021'),
+('Mateo', 'Diaz', 'Cliente', NULL, 9, '170001'),
+('Laura', 'Restrepo', 'Cliente', NULL, 10, '660001');
+
+-- Insertar datos en Servicio
+INSERT INTO Servicio (nombre, descripcion, estado)
+VALUES 
+('Atención al cliente', 'Soporte presencial en oficinas', 'Activo'),
+('Consultoría', 'Asesorías especializadas para clientes', 'Activo'),
+('Despacho', 'Gestión y envío de productos', 'Activo'),
+('Recepción de artículos', 'Control de ingreso de mercancía', 'Activo'),
+('Entrega', 'Entrega de pedidos a domicilio', 'Activo'),
+('Capacitación', 'Formación para nuevos empleados', 'Activo'),
+('Reparaciones', 'Mantenimiento y soporte técnico', 'Activo'),
+('Logística', 'Gestión de transporte y rutas', 'Activo'),
+('Teleasistencia', 'Atención remota al cliente', 'Activo'),
+('Control de calidad', 'Supervisión de procesos internos', 'Activo');
+
+--  Insertar datos en Empleado
+INSERT INTO Empleado (usuario_id, cargo, departamento)
+VALUES
+(2, 'Asesor', 'Atención al cliente'),
+(6, 'Técnico', 'Soporte'),
+(8, 'Supervisor', 'Logística'),
+(2, 'Consultor', 'Consultoría'),
+(6, 'Capacitador', 'Formación'),
+(8, 'Operador', 'Recepción'),
+(2, 'Encargado', 'Despacho'),
+(6, 'Reparador', 'Taller'),
+(8, 'Verificador', 'Calidad'),
+(2, 'Analista', 'Consultoría');
+
+-- Insertar datos en Turno
+INSERT INTO Turno (usuario_id, servicio_id, empleado_id, fecha, hora_inicio, hora_fin, estado)
+VALUES 
+(1, 1, 1, '2025-10-16', '08:00', '08:30', 'Activo'),
+(3, 2, 4, '2025-10-16', '09:00', '09:30', 'Activo'),
+(5, 3, 7, '2025-10-16', '10:00', '10:30', 'Activo'),
+(7, 4, 6, '2025-10-16', '11:00', '11:30', 'Activo'),
+(9, 5, 10, '2025-10-16', '12:00', '12:30', 'Activo'),
+(1, 6, 5, '2025-10-16', '13:00', '13:30', 'Activo'),
+(3, 7, 8, '2025-10-16', '14:00', '14:30', 'Activo'),
+(5, 8, 3, '2025-10-16', '15:00', '15:30', 'Activo'),
+(7, 9, 9, '2025-10-16', '16:00', '16:30', 'Activo'),
+(9, 10, 2, '2025-10-16', '17:00', '17:30', 'Activo');
+
+-- Insertar datos en Notificacion
+INSERT INTO Notificacion (usuario_id, medio, mensaje, fecha_envio, estado)
+VALUES 
+(1, 'Correo', 'Su turno fue creado exitosamente.', NOW(), 'Enviado'),
+(3, 'SMS', 'Recordatorio de su cita para hoy.', NOW(), 'Enviado'),
+(5, 'Correo', 'Su pedido está en camino.', NOW(), 'Enviado'),
+(7, 'Notificación App', 'Su turno fue reagendado.', NOW(), 'Pendiente'),
+(9, 'Correo', 'Encuesta de satisfacción disponible.', NOW(), 'Enviado'),
+(1, 'SMS', 'Confirmación de servicio recibido.', NOW(), 'Enviado'),
+(3, 'Correo', 'Gracias por usar LiMar.', NOW(), 'Enviado'),
+(5, 'App', 'Notificación de nuevo servicio.', NOW(), 'Pendiente'),
+(7, 'Correo', 'Actualización de horario.', NOW(), 'Enviado'),
+(9, 'SMS', 'Recordatorio de visita técnica.', NOW(), 'Enviado');
+
 
 Luego presiona F5 o haz clic en el botón  (Execute) para ejecutar las sentencias.
 
